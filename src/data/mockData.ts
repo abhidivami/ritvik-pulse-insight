@@ -22,6 +22,7 @@ export interface Task {
   selfInitiated?: boolean;
   estimatedHours?: number;
   actualHours?: number;
+  dependsOn?: string;
 }
 
 const departments = ["Design", "Engineering", "QA"] as const;
@@ -58,7 +59,7 @@ export function generateMockTasks(filters: MockFilters): Task[] {
     7,
     Math.ceil((filters.to.getTime() - filters.from.getTime()) / (1000 * 3600 * 24))
   );
-  const count = 80 + randomBetween(0, 80);
+  const count = 120 + randomBetween(0, 80);
   const tasks: Task[] = [];
 
   for (let i = 0; i < count; i++) {
@@ -74,13 +75,20 @@ export function generateMockTasks(filters: MockFilters): Task[] {
     const proj = filters.project ?? randomChoice(projects);
     const prio: Priority = filters.priority && filters.priority !== "all" ? filters.priority : randomChoice(["low", "medium", "high"]);
 
-    const status: TaskStatus = completedAt
+    const dependsOn = i > 5 && Math.random() > 0.7 ? `T-${randomBetween(0, i - 1)}` : undefined;
+
+    let status: TaskStatus = completedAt
       ? "done"
       : startedAt
       ? randomChoice(["in_progress", "blocked"])
       : "new";
 
-    const overdueDays = completedAt && completedAt > dueDate ? randomBetween(1, 8) : 0;
+    if (!completedAt && dependsOn) {
+      // If task has a dependency and not completed, increase chance of being blocked
+      status = Math.random() > 0.3 ? "blocked" : status;
+    }
+
+    const overdueDays = completedAt && dueDate && completedAt > dueDate ? randomBetween(1, 8) : 0;
 
     tasks.push({
       id: `T-${i}`,
@@ -102,6 +110,7 @@ export function generateMockTasks(filters: MockFilters): Task[] {
       selfInitiated: Math.random() > 0.6,
       estimatedHours: randomBetween(4, 24),
       actualHours: completedAt ? randomBetween(4, 28) : undefined,
+      dependsOn,
     });
   }
 

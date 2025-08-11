@@ -1,6 +1,6 @@
 import { MetricCard } from "./MetricCard";
 import { computeMetricsForGroup, groupBy, GroupMetrics } from "@/lib/metrics";
-import { generateMockTasks, MockFilters } from "@/data/mockData";
+import { generateMockTasks, MockFilters, Task } from "@/data/mockData";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from "recharts";
 import { useMemo } from "react";
 
@@ -9,11 +9,13 @@ export function DashboardGrid({
   filters,
   publicMode,
   onDrillDown,
+  tasks: externalTasks,
 }: {
   mode: "projects" | "departments";
   filters: { range: "30d" | "90d" | "quarter"; priority: "low" | "medium" | "high" | "all" };
   publicMode?: boolean;
   onDrillDown?: (metric: string, group: string) => void;
+  tasks?: Task[];
 }) {
   const dateRange = useMemo(() => {
     const to = new Date();
@@ -33,7 +35,7 @@ export function DashboardGrid({
     priority: filters.priority,
   };
 
-  const tasks = useMemo(() => generateMockTasks(mockFilters), [mockFilters.from.toISOString(), mockFilters.to.toISOString(), mockFilters.priority]);
+  const tasks = useMemo(() => externalTasks || generateMockTasks(mockFilters), [externalTasks, mockFilters.from.toISOString(), mockFilters.to.toISOString(), mockFilters.priority]);
 
   const grouped = useMemo(() => {
     const key = mode === "projects" ? "project" : "department";
